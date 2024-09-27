@@ -35,7 +35,6 @@ export const signup = async (req, res) => {
       verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, //24 hours
     });
 
-    //json web token
     generateToken(res, user._id);
 
     await sendVerificationEmail(user.email, verificationToken);
@@ -101,10 +100,9 @@ export const login = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid credentials" });
     }
-    const token = generateToken(res, user._id);
+    generateToken(res, user._id);
     return res.status(200).json({
       success: true,
-      token,
       message: "Logged in successfully",
       user: {
         ...user._doc,
@@ -180,13 +178,13 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-export const logout = async (req, res) => {
+export const logout = (req, res) => {
   try {
-    res.clearCookie("authToken");
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+    res.cookie("jwt", "", { maxAge: 1 });
+    res.status(200).json({ message: "User logged out successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
-    console.log("Error: ", err.message);
+    console.log("Error in signupUser: ", err.message);
   }
 };
 
@@ -205,5 +203,96 @@ export const checkAuth = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
     console.log(error.message);
+  }
+};
+
+export const updateUser = async (req, res) => {
+  const { userId } = req.params;
+  const {
+    firstname,
+    lastname,
+    email,
+    nationality,
+    foreign_resident,
+    residence_country,
+    civility,
+    birth_date,
+    birth_place,
+    level_education,
+    diplome,
+    quality,
+    identity_type,
+    address,
+    ville,
+    code_postal,
+    tel,
+    fax,
+  } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already in use by another account.",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        firstname,
+        lastname,
+        email,
+        nationality,
+        foreign_resident,
+        residence_country,
+        civility,
+        birth_date,
+        birth_place,
+        level_education,
+        diplome,
+        quality,
+        identity_type,
+        address,
+        ville,
+        code_postal,
+        tel,
+        fax,
+      },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+    console.log(error.message);
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "user deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "user not found" });
   }
 };

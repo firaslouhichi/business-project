@@ -1,19 +1,13 @@
 import express from "express";
-import { createMulterConfig } from "../config/multer.config.js";
-import imageFilter from "../config/filterImage.js";
+import { upload } from "../config/multer.config.js";
 import protectRoute from "../middlewares/protectRoute.js";
 import {
   uploadSingleFile,
-  uploadSinglePDF,
+  uploadFiles,
   deletePDF,
 } from "../controllers/upload.controller.js";
-import pdfFilter from "../config/filterPDF.js";
-
 const router = express.Router();
-const upload = createMulterConfig(imageFilter);
-const uploadPDF = createMulterConfig(pdfFilter);
 
-// Single file upload route
 router.post(
   "/single",
   protectRoute,
@@ -22,7 +16,12 @@ router.post(
 );
 
 // Single pdf upload route
-router.post("/pdf", protectRoute, uploadPDF.single("pdf"), uploadSinglePDF);
+router.post(
+  "/pdf",
+  protectRoute,
+  upload.fields([{ name: "pdf", maxCount: 10 }]),
+  uploadFiles
+);
 
 router.delete("/pdf/:id", protectRoute, deletePDF);
 

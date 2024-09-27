@@ -41,38 +41,33 @@ export const uploadSingleFile = async (req, res) => {
   }
 };
 
-// Single pdf upload controller
-export const uploadSinglePDF = async (req, res) => {
+export const uploadFiles = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        message:
-          "No file uploaded or file type not allowed. Please upload only PDF.",
-      });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded." });
     }
 
-    const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    const userId = req.userId;
 
-    const newPDF = new PDF({
-      path: fileUrl,
-      userId: req.userId,
-    });
+    const uploadedFiles = await Promise.all(
+      req.files.pdf.map(async (file) => {
+        const newPDF = new PDF({
+          path: `http://localhost:5000/uploads/${file.filename}`,
+          userId: userId,
+        });
+        return await newPDF.save();
+      })
+    );
 
-    await newPDF.save();
-
-    await User.findByIdAndUpdate(req.userId, {
-      $push: { PDF: newPDF },
-    });
-
-    res.json({
-      message: "File uploaded successfully",
-      pdf: newPDF,
+    res.status(200).json({
+      message: "Files uploaded successfully!",
+      files: uploadedFiles,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Error uploading files", error });
   }
 };
-
 export const deletePDF = async (req, res) => {
   try {
     const { id } = req.params;

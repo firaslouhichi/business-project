@@ -2,24 +2,50 @@ import mongoose from "mongoose";
 
 const serviceSchema = new mongoose.Schema(
   {
-    name: {
+    company_name: {
       type: String,
       required: true,
     },
-    description: {
+    manager: {
       type: String,
-      required: true,
     },
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
+    certificate_number: {
+      type: String,
     },
+    siege_social: { type: String },
+    registre_commerce: { type: String },
+    matricule_fiscale: { type: String },
+    forme_juridique: { type: String },
+    capitale_social: { type: Number },
+    participation_etrangere: { type: Boolean },
+    participation_locale: [
+      {
+        country: { type: String },
+        percentage: { type: Number },
+      },
+    ],
+    num_cnss: { type: String },
+    tel: { type: String },
+    fax: { type: String },
+    email: { type: String },
+    image: {
+      path: { type: String },
+      date: { type: Date },
+    },
+    validated: {
+      type: Boolean,
 
-    category: {
-      type: String,
-      enum: ["Category1", "Category2", "Category3"],
-      required: true,
+      default: false,
+    },
+    files: [
+      {
+        path: { type: String },
+        date: { type: Date },
+      },
+    ],
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }

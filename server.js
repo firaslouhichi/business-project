@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./db/connectDB.js";
 import uploadRoutes from "./routes/upload.route.js";
 import authRoutes from "./routes/auth.route.js";
+import serviceRoutes from "./routes/service.route.js";
+import orderRoutes from "./routes/order.route.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
@@ -12,19 +14,19 @@ import { User } from "./models/user.model.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Use routes
-app.use("/upload", uploadRoutes);
-
-app.use(express.json());
-app.use(cookieParser());
-
-app.use("/api/auth", authRoutes);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.json());
+app.use(cookieParser());
+
+// Use routes
+app.use("/upload", uploadRoutes);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/service", serviceRoutes);
+app.use("/api/order", orderRoutes);
 
 // Route to serve PDF files with correct Content-Type
 app.get("/uploads/:filename", (req, res) => {

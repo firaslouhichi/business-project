@@ -1,31 +1,19 @@
 import jwt from "jsonwebtoken";
 
-const protectRoute = (req, res, next) => {
+const protectRoute = async (req, res, next) => {
   try {
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized - no token provided" });
-    }
+    const token = req.cookies.jwt;
+    if (!token)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
 
-    // Extract token from the header
-    const token = authHeader.split(" ")[1];
-
-    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized - invalid token" });
-    }
-
-    // Attach userId to request object
+    if (!decoded)
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     req.userId = decoded.userId;
-    next(); // Proceed to the next middleware or route handler
+    next();
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-    console.error("Error in protectRoute middleware:", error.message);
+    res.status(500).json({ message: error.message });
+    console.log(error.message);
   }
 };
-
 export default protectRoute;
